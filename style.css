@@ -6,10 +6,8 @@ body {
 }
 /* Map Container */
 #map {
-    height: 90vh; /* Takes up 90% of the viewport height */
+    height: 90vh; 
     width: 100%;
-    /* We keep the background color commented out now, as the map should load */
-    /* background-color: lightcoral; */ 
 }
 /* Header Styling */
 header {
@@ -18,19 +16,51 @@ header {
     background-color: #f8f8f8;
     border-bottom: 1px solid #ddd;
 }
+/* Location Menu Styling - POSITIONED BOTTOM-RIGHT */
+#location-menu {
+    position: absolute;
+    bottom: 20px; 
+    right: 20px; 
+    top: auto;
+    left: auto;
+    z-index: 1000; 
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+}
+#location-menu h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1em;
+}
+#location-menu label {
+    font-size: 0.9em;
+    cursor: pointer;
+    padding: 2px 0;
+}
+
 /* Custom Popup Styling */
 #travel-info-popup {
     position: absolute;
-    z-index: 10; /* Make sure it's above the map */
+    z-index: 10; 
     background-color: white;
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     border: 1px solid #ccc;
-    /* Allows mouse events (like moving off the line) to work correctly */
     pointer-events: none; 
-    display: none; /* Initially hidden */
+    display: none; 
 }
+/* Styling for Time and Distance (bold and larger) */
+#travel-info-popup p {
+    font-weight: bold; 
+    font-size: 1.1em; 
+    margin: 5px 0; 
+}
+
 #travel-info-popup.visible {
     display: block;
 }
@@ -42,9 +72,13 @@ header {
     display: block;
     margin-top: 10px;
     padding: 8px;
-    background-color: #A0522D; /* Elegant brown/wedding color */
+    background-color: #A0522D; 
     color: white;
     text-align: center;
     text-decoration: none;
     border-radius: 4px;
+}
+/* FIX: Ensure cursor changes when hovering over the polyline hit area */
+.leaflet-interactive {
+    cursor: pointer !important;
 }
