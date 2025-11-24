@@ -16,14 +16,14 @@ header {
     background-color: #f8f8f8;
     border-bottom: 1px solid #ddd;
 }
-/* Location Menu Styling - POSITIONED BOTTOM-LEFT */
+/* Location Menu Styling - POSITIONED TOP-RIGHT (Outside Map Area) */
 #location-menu {
     position: absolute;
-    bottom: 6px; /* Positions 20px up from the bottom edge */
-    left: 20px; /* FIX: Positions 20px in from the left edge */
-    right: auto; /* Removes conflicting right property */
-    top: auto; /* Removes conflicting top property */
-    z-index: 1000; 
+    top: 20px; /* Positions 20px down from the top edge */
+    right: 20px; /* Positions 20px in from the right edge */
+    bottom: auto; /* Removes old bottom position */
+    left: auto; /* Removes old left position */
+    z-index: 1000; /* Ensures it floats above the header/map boundary */
     background: white;
     padding: 15px;
     border-radius: 8px;
