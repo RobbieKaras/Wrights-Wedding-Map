@@ -1,91 +1,26 @@
 // --- 1. DEFINE LOCATIONS & ROUTES ---
 const locations = {
-    // Ann Arbor: General downtown area
-    annarbor: {
-        lat: 42.2808,
-        lng: -83.7430,
-        label: "Ann Arbor",
-        elementId: "toggle-annarbor",
-        address: "Ann Arbor, MI",
-    },
-
-    // Plymouth (Reception): 499 S. Main St
-    plymouth: {
-        lat: 42.3686,
-        lng: -83.4727,
-        label: "The Meeting House (Reception)",
-        elementId: "toggle-plymouth",
-        address: "499 S. Main St, Plymouth, MI 48170",
-    },
-
-    // Newport (Wedding/Ceremony): 8033 N. Dixie Hwy
-    newport: {
-        lat: 42.0298,
-        lng: -83.3338,
-        label: "Newport Venue (Ceremony)",
-        elementId: "toggle-newport",
-        address: "8033 N. Dixie Hwy, Newport, MI 48166",
-    },
-
-    // DTW Airport: 9000 Middlebelt Rd
-    dtw: {
-        lat: 42.2162,
-        lng: -83.3551,
-        label: "DTW Airport",
-        elementId: "toggle-dtw",
-        address: "9000 Middlebelt Rd, Romulus, MI 48174",
-    },
+    annarbor: { lat: 42.2808, lng: -83.7430, label: "Ann Arbor", elementId: "toggle-annarbor", address: "Ann Arbor, MI" },
+    plymouth: { lat: 42.3686, lng: -83.4727, label: "The Meeting House (Reception)", elementId: "toggle-plymouth", address: "499 S. Main St, Plymouth, MI 48170" },
+    newport: { lat: 42.0298, lng: -83.3338, label: "Newport Venue (Ceremony)", elementId: "toggle-newport", address: "8033 N. Dixie Hwy, Newport, MI 48166" },
+    dtw: { lat: 42.2162, lng: -83.3551, label: "DTW Airport", elementId: "toggle-dtw", address: "9000 Middlebelt Rd, Romulus, MI 48174" }
 };
 
 const routes = [
-    // Define all routes with static data and the final, working Google Maps URL
-    {
-        start: "annarbor",
-        end: "plymouth",
-        time: 28,
-        distance: 20,
-        link: "https://www.google.com/maps/dir/Ann+Arbor,+MI/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170",
-    },
-    {
-        start: "annarbor",
-        end: "newport",
-        time: 45,
-        distance: 39,
-        link: "https://www.google.com/maps/dir/Ann+Arbor,+MI/8033+N+Dixie+Hwy,+Newport,+MI+48166",
-    },
-    {
-        start: "annarbor",
-        end: "dtw",
-        time: 30,
-        distance: 24,
-        link: "https://www.google.com/maps/dir/Ann+Arbor,+MI/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI",
-    },
-    {
-        start: "plymouth",
-        end: "newport",
-        time: 35,
-        distance: 33,
-        link: "https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/8033+N+Dixie+Hwy,+Newport,+MI+48166",
-    },
-    {
-        start: "plymouth",
-        end: "dtw",
-        time: 22,
-        distance: 17,
-        link: "https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI",
-    },
-    {
-        start: "newport",
-        end: "dtw",
-        time: 22,
-        distance: 20,
-        link: "https://www.google.com/maps/dir/8033+N+Dixie+Hwy,+Newport,+MI+48166/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI",
-    },
+    { start: "annarbor", end: "plymouth", time: 28, distance: 20, link: "https://www.google.com/maps/dir/Ann+Arbor,+MI/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170" },
+    { start: "annarbor", end: "newport", time: 45, distance: 39, link: "https://www.google.com/maps/dir/Ann+Arbor,+MI/8033+N+Dixie+Hwy,+Newport,+MI+48166" },
+    { start: "annarbor", end: "dtw", time: 30, distance: 24, link: "https://www.google.com/maps/dir/Ann+Arbor,+MI/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI" },
+    { start: "plymouth", end: "newport", time: 35, distance: 33, link: "https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/8033+N+Dixie+Hwy,+Newport,+MI+48166" },
+    { start: "plymouth", end: "dtw", time: 22, distance: 17, link: "https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI" },
+    { start: "newport", end: "dtw", time: 22, distance: 20, link: "https://www.google.com/maps/dir/8033+N+Dixie+Hwy,+Newport,+MI+48166/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI" }
 ];
 
 let map;
 let allMarkers = {};
 let allPolylines = [];
+
+// Detect touch/mobile (no hover)
+const IS_TOUCH = window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
 // --- 2. INITIALIZE MAP ---
 document.addEventListener("DOMContentLoaded", initMap);
@@ -106,7 +41,7 @@ function initMap() {
         map.invalidateSize();
     }, 100);
 
-    // FINAL FIX FOR IOS/CHROME: Force map redraw when tab visibility changes
+    // Force map redraw when tab visibility changes (mobile browser quirks)
     document.addEventListener("visibilitychange", function () {
         if (document.visibilityState === "visible") {
             map.invalidateSize();
@@ -116,14 +51,20 @@ function initMap() {
 
 // --- 3. DRAW MARKERS AND LINES (POLYLINES) ---
 function drawRoutesAndMarkers() {
+    // MARKERS
     for (const key in locations) {
         const loc = locations[key];
 
-        let marker = L.marker([loc.lat, loc.lng])
-            .addTo(map)
-            .bindTooltip(loc.label, { permanent: true, direction: "right" });
+        let marker = L.marker([loc.lat, loc.lng]).addTo(map);
 
-        // Pin Click Listener: Route from Current Location
+        // Desktop: permanent labels; Mobile: tap-to-show labels
+        if (!IS_TOUCH) {
+            marker.bindTooltip(loc.label, { permanent: true, direction: "right" });
+        } else {
+            marker.bindTooltip(loc.label, { permanent: false, direction: "top" });
+        }
+
+        // Pin click: route from current location to this venue (using ADDRESS, not coords)
         marker.on("click", () => {
             routeFromCurrentLocation(loc);
         });
@@ -131,33 +72,51 @@ function drawRoutesAndMarkers() {
         allMarkers[key] = marker;
     }
 
+    // ROUTE LINES
     routes.forEach((route) => {
-        const polyline = L.polyline(
-            [
-                [locations[route.start].lat, locations[route.start].lng],
-                [locations[route.end].lat, locations[route.end].lng],
-            ],
-            {
-                color: "#A0522D",
-                opacity: 0.8,
-                weight: 6, // Increased for mobile tap detection
-                interactive: true,
-                lineCap: "round",
-                lineJoin: "round",
-            }
-        ).addTo(map);
+        const latlngs = [
+            [locations[route.start].lat, locations[route.start].lng],
+            [locations[route.end].lat, locations[route.end].lng],
+        ];
 
-        // ATTACH HOVER LISTENERS
-        polyline.on("mouseover", (e) => showPopup(e, route));
-        polyline.on("mouseout", hidePopup);
+        // Visible line (pretty)
+        const polyline = L.polyline(latlngs, {
+            color: "#A0522D",
+            opacity: 0.8,
+            weight: 6,
+            interactive: true,
+            lineCap: "round",
+            lineJoin: "round",
+        }).addTo(map);
 
-        // ATTACH CLICK LISTENER (Opens the direct route link)
-        polyline.on("click", () => {
-            window.open(route.link, "_blank", "noopener,noreferrer");
-        });
+        // Invisible "hit line" (easy tapping on mobile, doesn't change visuals)
+        const hitLine = L.polyline(latlngs, {
+            opacity: 0,
+            weight: 25,
+            interactive: true,
+        }).addTo(map);
+
+        // Desktop: hover popup + click opens route
+        if (!IS_TOUCH) {
+            polyline.on("mouseover", (e) => showPopup(e, route));
+            polyline.on("mouseout", hidePopup);
+            polyline.on("click", () => window.open(route.link, "_blank", "noopener,noreferrer"));
+
+            hitLine.on("mouseover", (e) => showPopup(e, route));
+            hitLine.on("mouseout", hidePopup);
+            hitLine.on("click", () => window.open(route.link, "_blank", "noopener,noreferrer"));
+        } else {
+            // Mobile: tap shows popup (no hover on phones)
+            // (Guests can then tap the link inside the popup)
+            polyline.on("click", (e) => showPopup(e, route));
+            hitLine.on("click", (e) => showPopup(e, route));
+        }
 
         polyline.locations = [route.start, route.end];
-        allPolylines.push(polyline);
+        hitLine.locations = [route.start, route.end];
+
+        // Keep both lines together for toggling visibility
+        allPolylines.push({ visible: polyline, hit: hitLine });
     });
 }
 
@@ -181,33 +140,32 @@ function toggleLocation(locationId, isVisible) {
         map.removeLayer(marker);
     }
 
-    allPolylines.forEach((polyline) => {
-        const isConnected = polyline.locations.includes(locationId);
+    allPolylines.forEach((pair) => {
+        const isConnected = pair.visible.locations.includes(locationId);
 
         if (isConnected) {
-            const otherLocationId = polyline.locations.find((id) => id !== locationId);
-            const otherMarkerIsVisible =
-                document.getElementById(`toggle-${otherLocationId}`).checked;
+            const otherLocationId = pair.visible.locations.find((id) => id !== locationId);
+            const otherMarkerIsVisible = document.getElementById(`toggle-${otherLocationId}`).checked;
 
-            let finalOpacity;
+            const finalOpacity = isVisible && otherMarkerIsVisible ? 0.8 : 0;
 
-            if (isVisible && otherMarkerIsVisible) {
-                finalOpacity = 0.8;
-            } else {
-                finalOpacity = 0;
-            }
+            // Visible line appearance
+            pair.visible.setStyle({ opacity: finalOpacity });
 
-            // Leaflet doesn't use "clickable" here; it uses "interactive"
-            polyline.setStyle({ opacity: finalOpacity });
-            polyline.options.interactive = finalOpacity > 0;
+            // Hit line should only be interactive when the route is "visible"
+            pair.hit.setStyle({ opacity: 0 });
+            pair.hit.options.interactive = finalOpacity > 0;
+
+            // Also prevent interactions on the visible line when hidden
+            pair.visible.options.interactive = finalOpacity > 0;
         }
     });
 }
 
 // --- 5. ROUTE FROM CURRENT LOCATION ---
-// FIX: Use browser GPS and pass explicit origin+destination coords to Google Maps.
+// Uses browser GPS for origin, but uses the VENUE ADDRESS for destination (nicer than coords).
 function routeFromCurrentLocation(locationObject) {
-    const dest = `${locationObject.lat},${locationObject.lng}`;
+    const destinationAddress = locationObject.address;
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -217,16 +175,16 @@ function routeFromCurrentLocation(locationObject) {
                 const url =
                     `https://www.google.com/maps/dir/?api=1` +
                     `&origin=${encodeURIComponent(origin)}` +
-                    `&destination=${encodeURIComponent(dest)}` +
+                    `&destination=${encodeURIComponent(destinationAddress)}` +
                     `&travelmode=driving`;
 
                 window.open(url, "_blank", "noopener,noreferrer");
             },
             () => {
-                // If user blocks location, fall back to opening the destination pin
+                // If user blocks location, fall back to searching the address
                 const url =
                     `https://www.google.com/maps/search/?api=1` +
-                    `&query=${encodeURIComponent(dest)}`;
+                    `&query=${encodeURIComponent(destinationAddress)}`;
 
                 window.open(url, "_blank", "noopener,noreferrer");
             },
@@ -238,7 +196,7 @@ function routeFromCurrentLocation(locationObject) {
     // Very old browser fallback
     const url =
         `https://www.google.com/maps/search/?api=1` +
-        `&query=${encodeURIComponent(dest)}`;
+        `&query=${encodeURIComponent(destinationAddress)}`;
 
     window.open(url, "_blank", "noopener,noreferrer");
 }
@@ -251,20 +209,12 @@ const popupDistance = document.getElementById("popup-distance");
 const popupLink = document.getElementById("popup-link");
 
 function showPopup(event, routeData) {
-    // Only show popup if the line is currently visible (opacity > 0)
-    if (event.target.options.opacity > 0) {
-        // Use double-sided arrow for route name
+    // Only show popup if the route line is currently visible (opacity > 0)
+    if (event?.target?.options?.opacity > 0 || IS_TOUCH) {
         popupRoute.textContent = `${locations[routeData.start].label} \u2194 ${locations[routeData.end].label}`;
-
-        // Display Estimate: X min
         popupTime.textContent = `Estimate: ${routeData.time} min`;
-
-        // Display Distance: Y mi
         popupDistance.textContent = `Distance: ${routeData.distance} mi`;
-
-        // Set the link
         popupLink.href = routeData.link;
-
         popup.classList.add("visible");
     }
 }
@@ -272,3 +222,4 @@ function showPopup(event, routeData) {
 function hidePopup() {
     popup.classList.remove("visible");
 }
+
