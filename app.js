@@ -136,16 +136,18 @@ function toggleLocation(locationId, isVisible) {
 
 // --- 5. ROUTE FROM CURRENT LOCATION ---
 function routeFromCurrentLocation(locationObject) {
-    // Use lat,lng for the most reliable Google Maps behavior
-    const destination = encodeURIComponent(`${locationObject.lat},${locationObject.lng}`);
+    // Use lat,lng for reliability
+    const destination = `${locationObject.lat},${locationObject.lng}`;
 
+    // Let Google infer origin as "Your location"
     const googleMapsUrl =
         `https://www.google.com/maps/dir/?api=1` +
-        `&origin=My+Location` +
-        `&destination=${destination}` +
+        `&destination=${encodeURIComponent(destination)}` +
         `&travelmode=driving`;
 
-    window.open(googleMapsUrl, '_blank');
+    window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
+}
+
 }
 
 // --- 6. HANDLE INTERACTION (POPUP LOGIC) ---
@@ -180,4 +182,5 @@ function showPopup(event, routeData) {
 function hidePopup() {
     popup.classList.remove('visible');
 }
+
 
