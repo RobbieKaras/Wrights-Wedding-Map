@@ -15,12 +15,12 @@ const locations = {
 
 const routes = [
     // Define all routes with static data and the final, working Google Maps URL
-    { start: 'annarbor', end: 'plymouth', time: 25, distance: 17, link: 'https://www.google.com/maps/dir/Ann+Arbor,+MI/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170' },
+    { start: 'annarbor', end: 'plymouth', time: 28, distance: 20, link: 'https://www.google.com/maps/dir/Ann+Arbor,+MI/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170' },
     { start: 'annarbor', end: 'newport', time: 45, distance: 39, link: 'https://www.google.com/maps/dir/Ann+Arbor,+MI/8033+N+Dixie+Hwy,+Newport,+MI+48166' },
-    { start: 'annarbor', end: 'dtw', time: 30, distance: 28, link: 'https://www.google.com/maps/dir/Ann+Arbor,+MI/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI' },
-    { start: 'plymouth', end: 'newport', time: 50, distance: 45, link: 'https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/8033+N+Dixie+Hwy,+Newport,+MI+48166' },
+    { start: 'annarbor', end: 'dtw', time: 30, distance: 24, link: 'https://www.google.com/maps/dir/Ann+Arbor,+MI/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI' },
+    { start: 'plymouth', end: 'newport', time: 35, distance: 33, link: 'https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/8033+N+Dixie+Hwy,+Newport,+MI+48166' },
     { start: 'plymouth', end: 'dtw', time: 22, distance: 17, link: 'https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI' },
-    { start: 'newport', end: 'dtw', time: 25, distance: 23, link: 'https://www.google.com/maps/dir/8033+N+Dixie+Hwy,+Newport,+MI+48166/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI' }
+    { start: 'newport', end: 'dtw', time: 22, distance: 20, link: 'https://www.google.com/maps/dir/8033+N+Dixie+Hwy,+Newport,+MI+48166/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI' }
 ];
 
 let map; 
@@ -136,12 +136,15 @@ function toggleLocation(locationId, isVisible) {
 
 // --- 5. ROUTE FROM CURRENT LOCATION ---
 function routeFromCurrentLocation(locationObject) {
-    // Uses the full address for reliable routing
-    const destinationAddress = encodeURIComponent(locationObject.address);
-    
-    // URL: Origin is left blank/general ('/dir/') forcing GPS location detection.
-    const googleMapsUrl = `https://www.google.com/maps/dir//${destinationAddress}&travelmode=driving`;
-    
+    // Use lat,lng for the most reliable Google Maps behavior
+    const destination = encodeURIComponent(`${locationObject.lat},${locationObject.lng}`);
+
+    const googleMapsUrl =
+        `https://www.google.com/maps/dir/?api=1` +
+        `&origin=My+Location` +
+        `&destination=${destination}` +
+        `&travelmode=driving`;
+
     window.open(googleMapsUrl, '_blank');
 }
 
@@ -177,3 +180,4 @@ function showPopup(event, routeData) {
 function hidePopup() {
     popup.classList.remove('visible');
 }
+
