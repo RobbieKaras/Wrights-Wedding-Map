@@ -1,54 +1,114 @@
 // --- 1. DEFINE LOCATIONS & ROUTES ---
 const locations = {
     // Ann Arbor: General downtown area
-    'annarbor': { lat: 42.2808, lng: -83.7430, label: 'Ann Arbor', elementId: 'toggle-annarbor', address: 'Ann Arbor, MI' }, 
-    
+    annarbor: {
+        lat: 42.2808,
+        lng: -83.7430,
+        label: "Ann Arbor",
+        elementId: "toggle-annarbor",
+        address: "Ann Arbor, MI",
+    },
+
     // Plymouth (Reception): 499 S. Main St
-    'plymouth': { lat: 42.3686, lng: -83.4727, label: 'The Meeting House (Reception)', elementId: 'toggle-plymouth', address: '499 S. Main St, Plymouth, MI 48170' }, 
-    
+    plymouth: {
+        lat: 42.3686,
+        lng: -83.4727,
+        label: "The Meeting House (Reception)",
+        elementId: "toggle-plymouth",
+        address: "499 S. Main St, Plymouth, MI 48170",
+    },
+
     // Newport (Wedding/Ceremony): 8033 N. Dixie Hwy
-    'newport': { lat: 42.0298, lng: -83.3338, label: 'Newport Venue (Ceremony)', elementId: 'toggle-newport', address: '8033 N. Dixie Hwy, Newport, MI 48166' }, 
-    
+    newport: {
+        lat: 42.0298,
+        lng: -83.3338,
+        label: "Newport Venue (Ceremony)",
+        elementId: "toggle-newport",
+        address: "8033 N. Dixie Hwy, Newport, MI 48166",
+    },
+
     // DTW Airport: 9000 Middlebelt Rd
-    'dtw': { lat: 42.2162, lng: -83.3551, label: 'DTW Airport', elementId: 'toggle-dtw', address: '9000 Middlebelt Rd, Romulus, MI 48174' }
+    dtw: {
+        lat: 42.2162,
+        lng: -83.3551,
+        label: "DTW Airport",
+        elementId: "toggle-dtw",
+        address: "9000 Middlebelt Rd, Romulus, MI 48174",
+    },
 };
 
 const routes = [
     // Define all routes with static data and the final, working Google Maps URL
-    { start: 'annarbor', end: 'plymouth', time: 28, distance: 20, link: 'https://www.google.com/maps/dir/Ann+Arbor,+MI/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170' },
-    { start: 'annarbor', end: 'newport', time: 45, distance: 39, link: 'https://www.google.com/maps/dir/Ann+Arbor,+MI/8033+N+Dixie+Hwy,+Newport,+MI+48166' },
-    { start: 'annarbor', end: 'dtw', time: 30, distance: 24, link: 'https://www.google.com/maps/dir/Ann+Arbor,+MI/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI' },
-    { start: 'plymouth', end: 'newport', time: 35, distance: 33, link: 'https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/8033+N+Dixie+Hwy,+Newport,+MI+48166' },
-    { start: 'plymouth', end: 'dtw', time: 22, distance: 17, link: 'https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI' },
-    { start: 'newport', end: 'dtw', time: 22, distance: 20, link: 'https://www.google.com/maps/dir/8033+N+Dixie+Hwy,+Newport,+MI+48166/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI' }
+    {
+        start: "annarbor",
+        end: "plymouth",
+        time: 28,
+        distance: 20,
+        link: "https://www.google.com/maps/dir/Ann+Arbor,+MI/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170",
+    },
+    {
+        start: "annarbor",
+        end: "newport",
+        time: 45,
+        distance: 39,
+        link: "https://www.google.com/maps/dir/Ann+Arbor,+MI/8033+N+Dixie+Hwy,+Newport,+MI+48166",
+    },
+    {
+        start: "annarbor",
+        end: "dtw",
+        time: 30,
+        distance: 24,
+        link: "https://www.google.com/maps/dir/Ann+Arbor,+MI/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI",
+    },
+    {
+        start: "plymouth",
+        end: "newport",
+        time: 35,
+        distance: 33,
+        link: "https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/8033+N+Dixie+Hwy,+Newport,+MI+48166",
+    },
+    {
+        start: "plymouth",
+        end: "dtw",
+        time: 22,
+        distance: 17,
+        link: "https://www.google.com/maps/dir/The+Meeting+House+at+499+S+Main+St,+Plymouth,+MI+48170/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI",
+    },
+    {
+        start: "newport",
+        end: "dtw",
+        time: 22,
+        distance: 20,
+        link: "https://www.google.com/maps/dir/8033+N+Dixie+Hwy,+Newport,+MI+48166/Detroit+Metropolitan+Wayne+County+Airport+(DTW),+Romulus,+MI",
+    },
 ];
 
-let map; 
-let allMarkers = {}; 
-let allPolylines = []; 
+let map;
+let allMarkers = {};
+let allPolylines = [];
 
 // --- 2. INITIALIZE MAP ---
-document.addEventListener('DOMContentLoaded', initMap); 
+document.addEventListener("DOMContentLoaded", initMap);
 
 function initMap() {
-    map = L.map('map').setView([42.2, -83.5], 9); 
+    map = L.map("map").setView([42.2, -83.5], 9);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
-        attribution: '© OpenStreetMap contributors' 
+        attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
     drawRoutesAndMarkers();
-    setupToggles(); 
-    
+    setupToggles();
+
     // Initial centering fix
     setTimeout(function () {
         map.invalidateSize();
-    }, 100); 
+    }, 100);
 
     // FINAL FIX FOR IOS/CHROME: Force map redraw when tab visibility changes
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') {
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") {
             map.invalidateSize();
         }
     });
@@ -57,49 +117,56 @@ function initMap() {
 // --- 3. DRAW MARKERS AND LINES (POLYLINES) ---
 function drawRoutesAndMarkers() {
     for (const key in locations) {
-        let marker = L.marker([locations[key].lat, locations[key].lng])
+        const loc = locations[key];
+
+        let marker = L.marker([loc.lat, loc.lng])
             .addTo(map)
-            .bindTooltip(locations[key].label, { permanent: true, direction: 'right' }); 
-        
+            .bindTooltip(loc.label, { permanent: true, direction: "right" });
+
         // Pin Click Listener: Route from Current Location
-        marker.on('click', () => { 
-            routeFromCurrentLocation(locations[key]); 
+        marker.on("click", () => {
+            routeFromCurrentLocation(loc);
         });
 
-        allMarkers[key] = marker; 
+        allMarkers[key] = marker;
     }
 
-    routes.forEach(route => {
-        const polyline = L.polyline([
-            [locations[route.start].lat, locations[route.start].lng],
-            [locations[route.end].lat, locations[route.end].lng]
-        ], {
-            color: '#A0522D', 
-            opacity: 0.8,
-            weight: 6, // Increased for mobile tap detection
-            interactive: true, 
-            lineCap: 'round',
-            lineJoin: 'round'
-        }).addTo(map);
+    routes.forEach((route) => {
+        const polyline = L.polyline(
+            [
+                [locations[route.start].lat, locations[route.start].lng],
+                [locations[route.end].lat, locations[route.end].lng],
+            ],
+            {
+                color: "#A0522D",
+                opacity: 0.8,
+                weight: 6, // Increased for mobile tap detection
+                interactive: true,
+                lineCap: "round",
+                lineJoin: "round",
+            }
+        ).addTo(map);
 
         // ATTACH HOVER LISTENERS
-        polyline.on('mouseover', (e) => showPopup(e, route));
-        polyline.on('mouseout', hidePopup);
-        
+        polyline.on("mouseover", (e) => showPopup(e, route));
+        polyline.on("mouseout", hidePopup);
+
         // ATTACH CLICK LISTENER (Opens the direct route link)
-        polyline.on('click', () => { window.open(route.link, '_blank'); });
+        polyline.on("click", () => {
+            window.open(route.link, "_blank", "noopener,noreferrer");
+        });
 
         polyline.locations = [route.start, route.end];
-        allPolylines.push(polyline); 
+        allPolylines.push(polyline);
     });
 }
 
 // --- 4. LOCATION TOGGLE LOGIC ---
 function setupToggles() {
-    const ids = ['annarbor', 'plymouth', 'newport', 'dtw'];
-    
-    ids.forEach(id => {
-        document.getElementById(`toggle-${id}`).addEventListener('change', (e) => {
+    const ids = ["annarbor", "plymouth", "newport", "dtw"];
+
+    ids.forEach((id) => {
+        document.getElementById(`toggle-${id}`).addEventListener("change", (e) => {
             toggleLocation(id, e.target.checked);
         });
     });
@@ -107,80 +174,101 @@ function setupToggles() {
 
 function toggleLocation(locationId, isVisible) {
     const marker = allMarkers[locationId];
-    
+
     if (isVisible) {
         map.addLayer(marker);
     } else {
         map.removeLayer(marker);
     }
-    
-    allPolylines.forEach(polyline => {
+
+    allPolylines.forEach((polyline) => {
         const isConnected = polyline.locations.includes(locationId);
 
         if (isConnected) {
-            const otherLocationId = polyline.locations.find(id => id !== locationId);
-            const otherMarkerIsVisible = document.getElementById(`toggle-${otherLocationId}`).checked;
+            const otherLocationId = polyline.locations.find((id) => id !== locationId);
+            const otherMarkerIsVisible =
+                document.getElementById(`toggle-${otherLocationId}`).checked;
 
             let finalOpacity;
-            
+
             if (isVisible && otherMarkerIsVisible) {
-                finalOpacity = 0.8; 
+                finalOpacity = 0.8;
             } else {
                 finalOpacity = 0;
             }
 
-            polyline.setStyle({ opacity: finalOpacity, clickable: finalOpacity > 0 });
+            // Leaflet doesn't use "clickable" here; it uses "interactive"
+            polyline.setStyle({ opacity: finalOpacity });
+            polyline.options.interactive = finalOpacity > 0;
         }
     });
 }
 
 // --- 5. ROUTE FROM CURRENT LOCATION ---
+// FIX: Use browser GPS and pass explicit origin+destination coords to Google Maps.
 function routeFromCurrentLocation(locationObject) {
-    // Use lat,lng for reliability
-    const destination = `${locationObject.lat},${locationObject.lng}`;
+    const dest = `${locationObject.lat},${locationObject.lng}`;
 
-    // Let Google infer origin as "Your location"
-    const googleMapsUrl =
-        `https://www.google.com/maps/dir/?api=1` +
-        `&destination=${encodeURIComponent(destination)}` +
-        `&travelmode=driving`;
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const origin = `${pos.coords.latitude},${pos.coords.longitude}`;
 
-    window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
-}
+                const url =
+                    `https://www.google.com/maps/dir/?api=1` +
+                    `&origin=${encodeURIComponent(origin)}` +
+                    `&destination=${encodeURIComponent(dest)}` +
+                    `&travelmode=driving`;
 
+                window.open(url, "_blank", "noopener,noreferrer");
+            },
+            () => {
+                // If user blocks location, fall back to opening the destination pin
+                const url =
+                    `https://www.google.com/maps/search/?api=1` +
+                    `&query=${encodeURIComponent(dest)}`;
+
+                window.open(url, "_blank", "noopener,noreferrer");
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+        return;
+    }
+
+    // Very old browser fallback
+    const url =
+        `https://www.google.com/maps/search/?api=1` +
+        `&query=${encodeURIComponent(dest)}`;
+
+    window.open(url, "_blank", "noopener,noreferrer");
 }
 
 // --- 6. HANDLE INTERACTION (POPUP LOGIC) ---
-const popup = document.getElementById('travel-info-popup');
-const popupRoute = document.getElementById('popup-route');
-const popupTime = document.getElementById('popup-time');
-const popupDistance = document.getElementById('popup-distance');
-const popupLink = document.getElementById('popup-link');
+const popup = document.getElementById("travel-info-popup");
+const popupRoute = document.getElementById("popup-route");
+const popupTime = document.getElementById("popup-time");
+const popupDistance = document.getElementById("popup-distance");
+const popupLink = document.getElementById("popup-link");
 
 function showPopup(event, routeData) {
     // Only show popup if the line is currently visible (opacity > 0)
     if (event.target.options.opacity > 0) {
-        
         // Use double-sided arrow for route name
         popupRoute.textContent = `${locations[routeData.start].label} \u2194 ${locations[routeData.end].label}`;
-        
+
         // Display Estimate: X min
         popupTime.textContent = `Estimate: ${routeData.time} min`;
-        
+
         // Display Distance: Y mi
         popupDistance.textContent = `Distance: ${routeData.distance} mi`;
-        
+
         // Set the link
         popupLink.href = routeData.link;
 
-        // Positioning code is removed as CSS handles fixed bottom-left position
-        
-        popup.classList.add('visible');
+        popup.classList.add("visible");
     }
 }
 
 function hidePopup() {
-    popup.classList.remove('visible');
+    popup.classList.remove("visible");
 }
-
-
