@@ -19,7 +19,7 @@ let map;
 let allMarkers = {};
 let allRoutePairs = []; // { visible, hit, locations: [start,end], isShown: boolean }
 
-// --- 2. POPUP ELEMENTS (your IDs) ---
+// --- 2. POPUP ELEMENTS ---
 const popup = document.getElementById("travel-info-popup");
 const popupRoute = document.getElementById("popup-route");
 const popupTime = document.getElementById("popup-time");
@@ -40,14 +40,18 @@ function initMap() {
   drawRoutesAndMarkers();
   setupToggles();
 
-  // sizing fixes
   setTimeout(() => map.invalidateSize(), 100);
+
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") map.invalidateSize();
   });
 
-  // click anywhere on the map background to hide popup
+  // ✅ Only hide popup when clicking the map background.
+  // Line clicks will stop propagation so this won't run.
   map.on("click", hidePopup);
+
+  // ✅ Prevent clicks inside the popup from closing it via map click
+  L.DomEvent.disableClickPropagation(popup);
 }
 
 // --- 4. DRAW MARKERS + ROUTES ---
@@ -71,7 +75,6 @@ function drawRoutesAndMarkers() {
       [locations[route.end].lat, locations[route.end].lng]
     ];
 
-    // pretty visible line
     const visible = L.polyline(latlngs, {
       color: "#A0522D",
       opacity: 0.8,
@@ -81,14 +84,13 @@ function drawRoutesAndMarkers() {
       lineJoin: "round"
     }).addTo(map);
 
-    // invisible fat hit area (so lines aren’t “too small” on phones)
+    // Invisible fat hit line (better tapping/clicking)
     const hit = L.polyline(latlngs, {
       opacity: 0,
       weight: 25,
       interactive: true
     }).addTo(map);
 
-    // ✅ Pair object controls whether clicks should do anything
     const pair = {
       visible,
       hit,
@@ -97,10 +99,12 @@ function drawRoutesAndMarkers() {
     };
 
     const onRouteClick = (e) => {
-      // ✅ Stop map click handler from immediately hiding popup
-      if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
+      // ✅ Bulletproof: stop the DOM event so map click does NOT fire
+      if (e && e.originalEvent) {
+        L.DomEvent.stopPropagation(e.originalEvent);
+        L.DomEvent.preventDefault(e.originalEvent);
+      }
 
-      // ✅ Only show popup if this route is currently visible
       if (pair.isShown) {
         showPopup(route);
       }
@@ -132,20 +136,16 @@ function toggleLocation(locationId, isVisible) {
   else map.removeLayer(marker);
 
   allRoutePairs.forEach((pair) => {
-    const isConnected = pair.locations.includes(locationId);
-    if (!isConnected) return;
+    if (!pair.locations.includes(locationId)) return;
 
     const otherId = pair.locations.find((id) => id !== locationId);
     const otherVisible = document.getElementById(`toggle-${otherId}`).checked;
 
     const show = isVisible && otherVisible;
-
-    // ✅ Control behavior with pair.isShown (not interactive toggling)
     pair.isShown = show;
 
-    // Visual hide/show
     pair.visible.setStyle({ opacity: show ? 0.8 : 0 });
-    // hit line stays invisible; no need to change it
+    // hit line stays invisible; click is gated by pair.isShown
   });
 
   hidePopup();
@@ -156,7 +156,10 @@ function routeFromCurrentLocation(locationObject) {
   const destination = locationObject.address;
 
   if (!navigator.geolocation) {
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`, "_blank");
+    window.open(
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`,
+      "_blank"
+    );
     return;
   }
 
@@ -173,8 +176,11 @@ function routeFromCurrentLocation(locationObject) {
       window.open(url, "_blank", "noopener,noreferrer");
     },
     () => {
-      // if they block location, open the destination only
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`, "_blank", "noopener,noreferrer");
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
     },
     { enableHighAccuracy: true, timeout: 10000 }
   );
@@ -193,4 +199,5 @@ function showPopup(routeData) {
 function hidePopup() {
   popup.classList.remove("visible");
 }
+
 
