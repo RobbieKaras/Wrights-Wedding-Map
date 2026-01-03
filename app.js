@@ -17,7 +17,7 @@ const routes = [
 
 let map;
 let allMarkers = {};
-let allRoutePairs = []; // { visible, hit, locations: [start,end] }
+let allRoutePairs = []; // { visible, hit, locations: [start,end], isShown: boolean }
 
 // --- 2. POPUP ELEMENTS (your IDs) ---
 const popup = document.getElementById("travel-info-popup");
@@ -88,12 +88,20 @@ function drawRoutesAndMarkers() {
       interactive: true
     }).addTo(map);
 
-    const onRouteClick = (e) => {
-      // prevent map click from instantly hiding the popup
-      if (e?.originalEvent) e.originalEvent.stopPropagation();
+    // ✅ Pair object controls whether clicks should do anything
+    const pair = {
+      visible,
+      hit,
+      locations: [route.start, route.end],
+      isShown: true
+    };
 
-      // only if route is currently shown
-      if (visible.options.opacity > 0) {
+    const onRouteClick = (e) => {
+      // ✅ Stop map click handler from immediately hiding popup
+      if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
+
+      // ✅ Only show popup if this route is currently visible
+      if (pair.isShown) {
         showPopup(route);
       }
     };
@@ -101,11 +109,7 @@ function drawRoutesAndMarkers() {
     visible.on("click", onRouteClick);
     hit.on("click", onRouteClick);
 
-    allRoutePairs.push({
-      visible,
-      hit,
-      locations: [route.start, route.end]
-    });
+    allRoutePairs.push(pair);
   });
 }
 
@@ -135,11 +139,13 @@ function toggleLocation(locationId, isVisible) {
     const otherVisible = document.getElementById(`toggle-${otherId}`).checked;
 
     const show = isVisible && otherVisible;
-    const opacity = show ? 0.8 : 0;
 
-    pair.visible.setStyle({ opacity });
-    pair.visible.options.interactive = show;
-    pair.hit.options.interactive = show;
+    // ✅ Control behavior with pair.isShown (not interactive toggling)
+    pair.isShown = show;
+
+    // Visual hide/show
+    pair.visible.setStyle({ opacity: show ? 0.8 : 0 });
+    // hit line stays invisible; no need to change it
   });
 
   hidePopup();
@@ -187,3 +193,4 @@ function showPopup(routeData) {
 function hidePopup() {
   popup.classList.remove("visible");
 }
+
