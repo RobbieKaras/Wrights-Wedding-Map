@@ -1,62 +1,96 @@
-/* =========================
-   HEADER / FLORAL BACKGROUND
-   ========================= */
-
+/* Minimal Reset */
+body {
+    margin: 0;
+    font-family: sans-serif;
+    color: #333;
+}
+/* Map Container */
+#map {
+    height: 90vh; /* Takes up 90% of the viewport height */
+    width: 100%;
+}
+/* Header Styling */
 header {
-  text-align: center;
-  color: #ffffff;
-  border-bottom: 1px solid #ddd;
-
-  background-image: url("images/floral-frame.png");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  background-color: #000000;
-
-  padding: 28px 16px;
+    text-align: center;
+    padding: 15px;
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+    /* FIX: Add substantial right padding to move centered text left and clear space for the fixed menu */
+    padding-right: 200px; 
+}
+/* Location Menu Styling - POSITIONED FIXED TOP-RIGHT */
+#location-menu {
+    position: fixed; /* Locks the menu to the browser viewport */
+    top: 20px; 
+    right: 20px; 
+    bottom: auto; 
+    left: auto; 
+    z-index: 1000; /* Ensures it is above the map */
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+}
+#location-menu h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1em;
+}
+#location-menu label {
+    font-size: 0.9em;
+    cursor: pointer;
+    padding: 2px 0;
 }
 
-header h1 {
-  margin: 0 0 8px;
-  font-size: 1.8rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.65);
+/* Custom Popup Styling - FIX: Fixed to Bottom-Left Corner */
+#travel-info-popup {
+    position: fixed; /* CRITICAL: Locks the popup to the screen */
+    bottom: 20px; /* Positions 20px up from the bottom edge */
+    left: 20px; /* Positions 20px in from the left edge */
+    top: auto; 
+    right: auto;
+    
+    z-index: 2000; /* CRITICAL: Ensures it is on top of the map and the toggle menu (which is z-index 1000) */
+    
+    width: 280px; 
+    max-width: 90%;
+    background-color: white;
+    padding: 20px; 
+    border-radius: 12px; 
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3); 
+    border: 1px solid #ccc;
+    pointer-events: auto; /* Allows clicks on the button */
+    display: none; 
+}
+/* Styling for Time and Distance (bold and larger) */
+#travel-info-popup p {
+    font-weight: bold; 
+    font-size: 1.1em; 
+    margin: 5px 0; 
 }
 
-header p {
-  margin: 6px 0;
-  font-size: 1rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.65);
+#travel-info-popup.visible {
+    display: block;
 }
-
-/* =========================
-   RESPONSIVE TUNING
-   ========================= */
-
-/* Desktop spacing */
-@media (min-width: 768px) {
-  header {
-    padding: 44px 24px;
-  }
-
-  header h1 {
-    font-size: 2.2rem;
-  }
-
-  header p {
-    font-size: 1.05rem;
-  }
+#travel-info-popup h3 {
+    margin-top: 0;
+    font-size: 1.2em; 
+    color: #A0522D; 
 }
-
-/* Keep text clear of fixed menu */
-@media (min-width: 900px) {
-  header {
-    padding-right: 220px;
-  }
+#travel-info-popup a {
+    display: block;
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #A0522D; 
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
 }
-
-/* Slightly enlarge frame on small phones */
-@media (max-width: 480px) {
-  header {
-    background-size: 115% auto;
-  }
+/* Ensure cursor changes when hovering over the polyline hit area */
+.leaflet-interactive {
+    cursor: pointer !important;
 }
