@@ -1,8 +1,8 @@
 // --- 1. DEFINE LOCATIONS & ROUTES ---
 const locations = {
   annarbor: { lat: 42.2808, lng: -83.7430, label: "Ann Arbor", elementId: "toggle-annarbor", address: "Ann Arbor, MI" },
-  plymouth: { lat: 42.3686, lng: -83.4727, label: "Plymouth (Reception)", elementId: "toggle-plymouth", address: "499 S. Main St, Plymouth, MI 48170" },
-  newport:  { lat: 42.0298,s, lng: -83.3338, label: "Newport (Ceremony)", elementId: "toggle-newport", address: "8033 N. Dixie Hwy, Newport, MI 48166" },
+  plymouth: { lat: 42.3686, lng: -83.4727, label: "The Meeting House (Reception)", elementId: "toggle-plymouth", address: "499 S. Main St, Plymouth, MI 48170" },
+  newport:  { lat: 42.0298, lng: -83.3338, label: "Newport Venue (Ceremony)", elementId: "toggle-newport", address: "8033 N. Dixie Hwy, Newport, MI 48166" },
   dtw:      { lat: 42.2162, lng: -83.3551, label: "DTW Airport", elementId: "toggle-dtw", address: "9000 Middlebelt Rd, Romulus, MI 48174" }
 };
 
@@ -16,17 +16,17 @@ const routes = [
 ];
 
 let map;
-let markers = {};
-let lines = [];
+let allMarkers = {};
+let allRoutePairs = []; // { visible, hit, locations: [start,end] }
 
-// --- POPUP ELEMENTS (match your index.html IDs) ---
+// --- 2. POPUP ELEMENTS (your IDs) ---
 const popup = document.getElementById("travel-info-popup");
 const popupRoute = document.getElementById("popup-route");
 const popupTime = document.getElementById("popup-time");
 const popupDistance = document.getElementById("popup-distance");
 const popupLink = document.getElementById("popup-link");
 
-// --- 2. INITIALIZE MAP ---
+// --- 3. INITIALIZE MAP ---
 document.addEventListener("DOMContentLoaded", initMap);
 
 function initMap() {
@@ -34,134 +34,156 @@ function initMap() {
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
-    attribution: "© OpenStreetMap contributors",
+    attribution: "© OpenStreetMap contributors"
   }).addTo(map);
 
-  drawMarkers();
-  drawRoutes();
+  drawRoutesAndMarkers();
   setupToggles();
 
+  // sizing fixes
   setTimeout(() => map.invalidateSize(), 100);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") map.invalidateSize();
+  });
 
-  // Clicking the map (not a line) hides popup
+  // click anywhere on the map background to hide popup
   map.on("click", hidePopup);
 }
 
-// --- 3. MARKERS ---
-function drawMarkers() {
+// --- 4. DRAW MARKERS + ROUTES ---
+function drawRoutesAndMarkers() {
+  // MARKERS
   for (const key in locations) {
     const loc = locations[key];
 
     const marker = L.marker([loc.lat, loc.lng]).addTo(map);
     marker.bindTooltip(loc.label, { permanent: false });
 
-    marker.on("click", () => {
-      routeFromCurrentLocation(loc);
-    });
+    marker.on("click", () => routeFromCurrentLocation(loc));
 
-    markers[key] = marker;
+    allMarkers[key] = marker;
   }
-}
 
-// --- 4. ROUTES (CLICK ONLY -> SHOW POPUP) ---
-function drawRoutes() {
+  // ROUTE LINES (CLICK ONLY → POPUP)
   routes.forEach((route) => {
     const latlngs = [
       [locations[route.start].lat, locations[route.start].lng],
-      [locations[route.end].lat, locations[route.end].lng],
+      [locations[route.end].lat, locations[route.end].lng]
     ];
 
-    const line = L.polyline(latlngs, {
+    // pretty visible line
+    const visible = L.polyline(latlngs, {
       color: "#A0522D",
-      weight: 7,
-      opacity: 0.85,
+      opacity: 0.8,
+      weight: 6,
+      interactive: true,
+      lineCap: "round",
+      lineJoin: "round"
     }).addTo(map);
 
-    line.locations = [route.start, route.end];
+    // invisible fat hit area (so lines aren’t “too small” on phones)
+    const hit = L.polyline(latlngs, {
+      opacity: 0,
+      weight: 25,
+      interactive: true
+    }).addTo(map);
 
-    line.on("click", (e) => {
-      // Prevent map click handler from instantly hiding the popup
+    const onRouteClick = (e) => {
+      // prevent map click from instantly hiding the popup
       if (e?.originalEvent) e.originalEvent.stopPropagation();
-      showPopup(route);
-    });
 
-    lines.push(line);
+      // only if route is currently shown
+      if (visible.options.opacity > 0) {
+        showPopup(route);
+      }
+    };
+
+    visible.on("click", onRouteClick);
+    hit.on("click", onRouteClick);
+
+    allRoutePairs.push({
+      visible,
+      hit,
+      locations: [route.start, route.end]
+    });
   });
 }
 
 // --- 5. TOGGLES ---
 function setupToggles() {
   ["annarbor", "plymouth", "newport", "dtw"].forEach((id) => {
-    document.getElementById(`toggle-${id}`).addEventListener("change", (e) => {
+    const el = document.getElementById(`toggle-${id}`);
+    if (!el) return;
+
+    el.addEventListener("change", (e) => {
       toggleLocation(id, e.target.checked);
     });
   });
 }
 
-function toggleLocation(id, visible) {
-  if (visible) map.addLayer(markers[id]);
-  else map.removeLayer(markers[id]);
+function toggleLocation(locationId, isVisible) {
+  const marker = allMarkers[locationId];
 
-  lines.forEach((line) => {
-    if (line.locations.includes(id)) {
-      const other = line.locations.find((x) => x !== id);
-      const otherVisible = document.getElementById(`toggle-${other}`).checked;
+  if (isVisible) map.addLayer(marker);
+  else map.removeLayer(marker);
 
-      const shouldShow = visible && otherVisible;
-      line.setStyle({ opacity: shouldShow ? 0.85 : 0 });
+  allRoutePairs.forEach((pair) => {
+    const isConnected = pair.locations.includes(locationId);
+    if (!isConnected) return;
 
-      // prevent clicking hidden lines
-      line.options.interactive = shouldShow;
-    }
+    const otherId = pair.locations.find((id) => id !== locationId);
+    const otherVisible = document.getElementById(`toggle-${otherId}`).checked;
+
+    const show = isVisible && otherVisible;
+    const opacity = show ? 0.8 : 0;
+
+    pair.visible.setStyle({ opacity });
+    pair.visible.options.interactive = show;
+    pair.hit.options.interactive = show;
   });
 
   hidePopup();
 }
 
-// --- 6. GOOGLE MAPS ROUTING (DESTINATION AS ADDRESS) ---
-function routeFromCurrentLocation(loc) {
-  const destination = loc.address;
+// --- 6. PIN ROUTING (ADDRESS, NOT COORDS) ---
+function routeFromCurrentLocation(locationObject) {
+  const destination = locationObject.address;
 
   if (!navigator.geolocation) {
-    window.open(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`,
-      "_blank"
-    );
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`, "_blank");
     return;
   }
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       const origin = `${pos.coords.latitude},${pos.coords.longitude}`;
+
       const url =
         `https://www.google.com/maps/dir/?api=1` +
         `&origin=${encodeURIComponent(origin)}` +
         `&destination=${encodeURIComponent(destination)}` +
         `&travelmode=driving`;
 
-      window.open(url, "_blank");
+      window.open(url, "_blank", "noopener,noreferrer");
     },
     () => {
-      window.open(
-        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`,
-        "_blank"
-      );
+      // if they block location, open the destination only
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`, "_blank", "noopener,noreferrer");
     },
     { enableHighAccuracy: true, timeout: 10000 }
   );
 }
 
-// --- 7. POPUP SHOW/HIDE (MATCHES class="hidden") ---
-function showPopup(route) {
-  popupRoute.textContent = `${locations[route.start].label} ↔ ${locations[route.end].label}`;
-  popupTime.textContent = `Estimate: ${route.time} min`;
-  popupDistance.textContent = `Distance: ${route.distance} mi`;
-  popupLink.href = route.link;
+// --- 7. POPUP SHOW/HIDE (matches your CSS .visible) ---
+function showPopup(routeData) {
+  popupRoute.textContent = `${locations[routeData.start].label} ↔ ${locations[routeData.end].label}`;
+  popupTime.textContent = `Estimate: ${routeData.time} min`;
+  popupDistance.textContent = `Distance: ${routeData.distance} mi`;
+  popupLink.href = routeData.link;
 
-  popup.classList.remove("hidden"); // <-- this is the key fix
+  popup.classList.add("visible");
 }
 
 function hidePopup() {
-  popup.classList.add("hidden");
+  popup.classList.remove("visible");
 }
-
